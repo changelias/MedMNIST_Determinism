@@ -18,11 +18,20 @@ from models import ResNet18, ResNet50
 from tensorboardX import SummaryWriter
 from torchvision.models import resnet18, resnet50
 from tqdm import trange
-from utils import bool_flag, fix_random_seeds
 
+def fix_random_seeds(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
-def main(data_flag, output_root, num_epochs, gpu_ids, batch_size, size, download, model_flag, resize, as_rgb, model_path, trials, determinism, benchmark, seed):
-    fix_random_seeds(seed)
+def main(data_flag, output_root, num_epochs, gpu_ids, batch_size, size, download, model_flag, resize, as_rgb, model_path, trials, fix_seeds, determinism, benchmark, seed):
+    print(f'fix_seeds: {fix_seeds}')
+    print(f'determinism: {determinism}')
+    print(f'determinism: {benchmark}')
+    
+    if fix_seeds:
+        fix_random_seeds(seed)
     
     if determinism:
         torch.use_deterministic_algorithms(True)
@@ -317,14 +326,15 @@ if __name__ == '__main__':
                         default=3,
                         help='independent runs',
                         type=int)                        
-    parser.add_argument('--determinism',
-                        default=False,
+    parser.add_argument('--fix_seeds',
                         help='run with deterministic torch algorithms',
-                        type=bool_flag)
+                        action="store_true")                    
+    parser.add_argument('--determinism',
+                        help='run with deterministic torch algorithms',
+                        action="store_true")
     parser.add_argument('--benchmark',
-                        default=True,
                         help='benchmark for cudnn',
-                        type=bool_flag)
+                        action="store_true")
     parser.add_argument('--seed',
                         default=0,
                         help='fixed random seed',
@@ -345,9 +355,10 @@ if __name__ == '__main__':
     model_path = args.model_path
     trials = args.trials
     runs = args.runs
+    fix_seeds = args.fix_seeds
     determinism = args.determinism
     benchmark = args.benchmark
     seed = args.seed
     
     for run in range(runs):
-        main(data_flag, output_root, num_epochs, gpu_ids, batch_size, size, download, model_flag, resize, as_rgb, model_path, trials, determinism, benchmark, seed)
+        main(data_flag, output_root, num_epochs, gpu_ids, batch_size, size, download, model_flag, resize, as_rgb, model_path, trials, fix_seeds, determinism, benchmark, seed)
